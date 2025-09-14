@@ -17,6 +17,25 @@ const add = async (req,res)=>{
     }
 }
 
+const login = async(req,res)=>{
+    try {
+        const {email,password} = req.body
+        const user = await User.findOne({where:{email}})
+        if (!user){
+            return res.status(404).json({message:"User Not Found"})
+        }
+        if (user.password !== password){
+            return res.status(401).json({message:"password Error "})
+        }
+        res.json({message: "Login successful"})
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Error logging in" });
+    }
+}
+
 module.exports = {
-    add
+    add,
+    login
+
 }
