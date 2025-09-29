@@ -2,57 +2,91 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Login</title>
+  <title>Dashboard</title>
 </head>
 <body>
-  <h2>Login</h2>
+  <h2>Welcome to Dashboard 🎉</h2>
+  <p>You logged in successfully.</p>
 
-  <form id="loginForm">
-    <label>Email:</label><br>
-    <input type="email" id="email" required><br><br>
+  <!-- Add Expense Form -->
+  <form id="expenseForm">
+    <label>Amount:</label><br>
+    <input type="number" id="amount" required><br><br>
 
-    <label>Password:</label><br>
-    <input type="password" id="password" required><br><br>
+    <label>Description:</label><br>
+    <input type="text" id="description" required><br><br>
 
-    <button type="submit">Login</button>
+    <label>Category:</label><br>
+    <select id="category">
+      <option value="food">Food</option>
+      <option value="travel">Travel</option>
+      <option value="shopping">Shopping</option>
+    </select><br><br>
+
+    <button type="submit">Add Expense</button>
   </form>
 
-  <br>
-  <p>New user? <a href="signup.html">Signup here</a></p>
+  <h3>Your Expenses:</h3>
+  <ul id="expenseList"></ul>
 
   <script>
-    const form = document.getElementById("loginForm");
+    const userId = localStorage.getItem("userId");
+    if (!userId) {
+      alert("Please login first!");
+      window.location.href = "login.html";
+    }
 
-    form.addEventListener("submit", async (e) => {
+    const expenseForm = document.getElementById("expenseForm");
+    const expenseList = document.getElementById("expenseList");
+
+    // ✅ Add Expense
+    expenseForm.addEventListener("submit", async (e) => {
       e.preventDefault();
 
-      const userData = {
-        email: document.getElementById("email").value,
-        password: document.getElementById("password").value
+      const expense = {
+        amount: document.getElementById("amount").value,
+        description: document.getElementById("description").value,
+        category: document.getElementById("category").value,
+        userId
       };
 
       try {
-        const res = await fetch("http://localhost:3000/app/login", {
+        const res = await fetch("http://localhost:3000/expense/add", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(userData)
+          body: JSON.stringify(expense)
         });
 
         const data = await res.json();
-
         if (res.ok) {
-          alert("Login successful");
-          // ✅ Redirect to dashboard.html
-          window.location.href = "index.html";
-
+          alert("Expense added successfully ✅");
+          loadExpenses();
         } else {
-          alert(data.message || "Login failed");
+          alert(data.message || "Error adding expense");
         }
       } catch (err) {
-        console.error(err);
-        alert("Error logging in: " + err.message);
+        alert("Something went wrong");
       }
     });
+
+    // ✅ Load Expenses
+    async function loadExpenses() {
+      try {
+        const res = await fetch("http://localhost:3000/expense/all?userId=" + userId);
+        const data = await res.json();
+
+        expenseList.innerHTML = "";
+        data.forEach(expense => {
+          const li = document.createElement("li");
+          li.textContent = `${expense.amount} - ${expense.description} (${expense.category})`;
+          expenseList.appendChild(li);
+        });
+      } catch (err) {
+        console.log(err);
+      }
+    }
+
+    loadExpenses();
   </script>
 </body>
 </html>
